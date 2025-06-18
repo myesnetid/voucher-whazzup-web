@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import VoucherManagement from './VoucherManagement';
 import BalanceManagement from './BalanceManagement';
 import UserManagement from './UserManagement';
+import SettingsComponent from './Settings';
 
 interface User {
   id: number;
@@ -135,12 +136,18 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={user.role === 'admin' ? 'grid w-full grid-cols-5' : 'grid w-full grid-cols-3'}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="vouchers">Voucher</TabsTrigger>
             <TabsTrigger value="balance">Saldo</TabsTrigger>
             {user.role === 'admin' && (
-              <TabsTrigger value="users">Users</TabsTrigger>
+              <>
+                <TabsTrigger value="users">Users</TabsTrigger>
+                <TabsTrigger value="settings">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Pengaturan
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
@@ -233,9 +240,15 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           </TabsContent>
 
           {user.role === 'admin' && (
-            <TabsContent value="users">
-              <UserManagement />
-            </TabsContent>
+            <>
+              <TabsContent value="users">
+                <UserManagement />
+              </TabsContent>
+              
+              <TabsContent value="settings">
+                <SettingsComponent user={user} />
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </div>
