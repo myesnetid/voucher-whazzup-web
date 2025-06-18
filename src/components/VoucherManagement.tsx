@@ -14,9 +14,18 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  EyeOff
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface User {
   id: number;
@@ -35,6 +44,7 @@ interface Voucher {
   generated_by: string;
   activated_at?: string;
   expires_at?: string;
+  created_at: string;
 }
 
 interface VoucherManagementProps {
@@ -46,6 +56,7 @@ const VoucherManagement = ({ user }: VoucherManagementProps) => {
   const [selectedProfile, setSelectedProfile] = useState('');
   const [voucherDetails, setVoucherDetails] = useState<Voucher | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showFullCode, setShowFullCode] = useState<{ [key: string]: boolean }>({});
   const { toast } = useToast();
 
   // Mock data
@@ -67,7 +78,8 @@ const VoucherManagement = ({ user }: VoucherManagementProps) => {
       status: 'active',
       generated_by: 'admin',
       activated_at: '2024-01-15 10:30:00',
-      expires_at: '2024-01-15 11:30:00'
+      expires_at: '2024-01-15 11:30:00',
+      created_at: '2024-01-15 09:00:00'
     },
     {
       id: 2,
@@ -76,7 +88,8 @@ const VoucherManagement = ({ user }: VoucherManagementProps) => {
       price_customer: 10000,
       price_reseller: 8000,
       status: 'pending',
-      generated_by: 'reseller1'
+      generated_by: 'reseller1',
+      created_at: '2024-01-15 08:45:00'
     },
     {
       id: 3,
@@ -87,9 +100,48 @@ const VoucherManagement = ({ user }: VoucherManagementProps) => {
       status: 'used',
       generated_by: 'admin',
       activated_at: '2024-01-14 09:00:00',
-      expires_at: '2024-01-15 09:00:00'
+      expires_at: '2024-01-15 09:00:00',
+      created_at: '2024-01-14 08:30:00'
     }
   ];
+
+  // Mock data for user's purchased vouchers - filtered by user
+  const myVouchers: Voucher[] = [
+    {
+      id: 4,
+      voucher_code: 'VOC567890',
+      profile_name: '6 Jam',
+      price_customer: 18000,
+      price_reseller: 15000,
+      status: 'pending',
+      generated_by: user.username,
+      created_at: '2024-01-16 14:20:00'
+    },
+    {
+      id: 5,
+      voucher_code: 'VOC234567',
+      profile_name: '1 Jam',
+      price_customer: 5000,
+      price_reseller: 4000,
+      status: 'used',
+      generated_by: user.username,
+      activated_at: '2024-01-16 10:00:00',
+      expires_at: '2024-01-16 11:00:00',
+      created_at: '2024-01-16 09:45:00'
+    }
+  ];
+
+  const censorVoucherCode = (code: string) => {
+    if (code.length <= 6) return code;
+    return code.substring(0, 3) + '***' + code.substring(code.length - 3);
+  };
+
+  const toggleShowCode = (voucherId: string) => {
+    setShowFullCode(prev => ({
+      ...prev,
+      [voucherId]: !prev[voucherId]
+    }));
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -126,7 +178,7 @@ const VoucherManagement = ({ user }: VoucherManagementProps) => {
         setVoucherDetails(voucher);
         toast({
           title: "Voucher ditemukan",
-          description: `Detail voucher ${voucher.voucher_code} berhasil dimuat`,
+          description: `Detail voucher berhasil dimuat`,
         });
       } else {
         setVoucherDetails(null);
@@ -324,6 +376,79 @@ const VoucherManagement = ({ user }: VoucherManagementProps) => {
         </CardContent>
       </Card>
 
+      {/* My Vouchers Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <ShoppingCart className="h-5 w-5 mr-2" />
+            Voucher Saya
+          </CardTitle>
+          <CardDescription>
+            Daftar voucher yang telah Anda beli
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Kode Voucher</TableHead>
+                <TableHead>Profil</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Harga</TableHead>
+                <TableHead>Tanggal Beli</TableHead>
+                <TableHead>Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {myVouchers.map((voucher) => (
+                <TableRow key={voucher.id}>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <code className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
+                        {showFullCode[voucher.id] ? voucher.voucher_code : censorVoucherCode(voucher.voucher_code)}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleShowCode(voucher.id.toString())}
+                        className="h-8 w-8 p-0"
+                      >
+                        {showFullCode[voucher.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell>{voucher.profile_name}</TableCell>
+                  <TableCell>{getStatusBadge(voucher.status)}</TableCell>
+                  <TableCell>
+                    Rp. {(user.role === 'reseller' ? voucher.price_reseller : voucher.price_customer).toLocaleString('id-ID')}
+                  </TableCell>
+                  <TableCell>{new Date(voucher.created_at).toLocaleString('id-ID')}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchCode(voucher.voucher_code);
+                        handleSearchVoucher();
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Detail
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          
+          {myVouchers.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              Anda belum memiliki voucher. Silakan beli voucher terlebih dahulu.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Recent Vouchers */}
       <Card>
         <CardHeader>
@@ -342,7 +467,7 @@ const VoucherManagement = ({ user }: VoucherManagementProps) => {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3">
                     <code className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
-                      {voucher.voucher_code}
+                      {user.role === 'admin' ? voucher.voucher_code : censorVoucherCode(voucher.voucher_code)}
                     </code>
                     {getStatusBadge(voucher.status)}
                   </div>
