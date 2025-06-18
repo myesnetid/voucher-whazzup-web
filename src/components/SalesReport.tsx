@@ -124,7 +124,7 @@ const SalesReport = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => `Rp. ${parseInt(value).toLocaleString('id-ID')}`} />
+                <Tooltip formatter={(value) => `Rp. ${Number(value).toLocaleString('id-ID')}`} />
                 <Bar dataKey="reseller_sales" fill="#0088FE" name="Reseller" />
                 <Bar dataKey="customer_sales" fill="#00C49F" name="Customer" />
               </BarChart>
@@ -153,7 +153,7 @@ const SalesReport = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `Rp. ${parseInt(value).toLocaleString('id-ID')}`} />
+                <Tooltip formatter={(value) => `Rp. ${Number(value).toLocaleString('id-ID')}`} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
